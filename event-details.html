@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details & Interactive Seat Selection — EventHub</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🎟️</span> EventHub
+            </a>
+            <nav class="nav-links">
+                <a href="index.html">← Back to Events</a>
+                <div id="userSection" style="display:none;" class="user-profile">
+                    <span id="userNameDisplay" class="user-badge"></span>
+                    <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+                </div>
+                <div id="authSection">
+                    <button class="btn btn-outline btn-sm" onclick="window.location.href='index.html'">Login to Reserve</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Event Header Card -->
+        <div id="eventHeaderCard" class="card event-banner-card">
+            <div class="loading-spinner">Loading event details...</div>
+        </div>
+
+        <!-- Seating & Booking Area -->
+        <div class="booking-layout">
+            <!-- Seating Grid -->
+            <div class="seating-panel card">
+                <div class="panel-header">
+                    <h3>Select Your Seats</h3>
+                    <div class="live-status">
+                        <span class="live-dot"></span> Live Seat Status (Auto-polling every 3s)
+                    </div>
+                </div>
+
+                <!-- Stage Indicator -->
+                <div class="stage-container">
+                    <div class="stage-bar">STAGE / SCREEN</div>
+                </div>
+
+                <!-- Legend -->
+                <div class="seating-legend">
+                    <div class="legend-item"><span class="seat-sample available"></span> Available</div>
+                    <div class="legend-item"><span class="seat-sample selected"></span> Selected by You</div>
+                    <div class="legend-item"><span class="seat-sample locked"></span> Reserved (Redis Lock)</div>
+                    <div class="legend-item"><span class="seat-sample booked"></span> Booked</div>
+                </div>
+
+                <!-- Seats Grid Container -->
+                <div id="seatingGrid" class="seats-container">
+                    <!-- Seats generated dynamically -->
+                </div>
+            </div>
+
+            <!-- Booking Summary Sidebar -->
+            <div class="summary-panel card">
+                <h3>Reservation Summary</h3>
+                <div id="lockTimerBox" class="lock-timer-box" style="display:none;">
+                    ⏱️ Seat Hold Expires in: <span id="countdownTimer" class="timer-countdown">10:00</span>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-row">
+                        <span>Selected Seats:</span>
+                        <strong id="selectedSeatsLabel">None</strong>
+                    </div>
+                    <div class="summary-row">
+                        <span>Seat Count:</span>
+                        <strong id="seatCountLabel">0</strong>
+                    </div>
+                    <hr>
+                    <div class="summary-row total-row">
+                        <span>Total Payable:</span>
+                        <strong id="totalPriceLabel">₹0.00</strong>
+                    </div>
+
+                    <div id="actionButtonContainer" class="mt-4">
+                        <button id="lockSeatsBtn" class="btn btn-warning btn-block" onclick="handleLockSeats()" disabled>
+                            Reserve Seats (10m Hold)
+                        </button>
+                        <button id="checkoutBtn" class="btn btn-primary btn-block mt-2" onclick="openCheckoutModal()" style="display:none;">
+                            Proceed to Payment
+                        </button>
+                    </div>
+                    <p id="lockStatusMsg" class="status-helper-text"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Payment & Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('checkoutModal')">&times;</span>
+            <h3>Complete Payment & Confirm Booking</h3>
+            <p class="modal-subtext">Idempotent Transaction Simulation with Apache Kafka Event Bus</p>
+
+            <div class="checkout-summary-box">
+                <div class="summary-row">
+                    <span>Event:</span>
+                    <strong id="payEventTitle"></strong>
+                </div>
+                <div class="summary-row">
+                    <span>Reserved Seats:</span>
+                    <strong id="paySeats"></strong>
+                </div>
+                <div class="summary-row">
+                    <span>Amount:</span>
+                    <strong id="payTotalAmount"></strong>
+                </div>
+            </div>
+
+            <div class="form-group mt-3">
+                <label>Payment Method Simulation</label>
+                <select id="paymentMethod" class="form-control">
+                    <option value="UPI">Instant UPI (Google Pay / PhonePe)</option>
+                    <option value="CARD">Credit / Debit Card</option>
+                    <option value="NET_BANKING">Net Banking</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="simulateFailureCheckbox">
+                    Simulate Payment Gateway Failure (to test rollback & lock release)
+                </label>
+            </div>
+
+            <div id="paymentResultMsg" class="alert-info" style="display:none;"></div>
+
+            <button id="payNowBtn" class="btn btn-primary btn-block mt-3" onclick="processPayment()">
+                Pay Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content text-center">
+            <div class="success-icon">🎉</div>
+            <h3>Booking Confirmed!</h3>
+            <p>Your ticket has been booked and an asynchronous event has been published to Kafka.</p>
+            <div class="booking-badge mt-2">
+                Reference Code: <strong id="confirmedRefCode"></strong>
+            </div>
+            <div class="mt-4">
+                <button class="btn btn-primary" onclick="window.location.href='index.html'">Go to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuthUI();
+            initEventDetailsPage();
+        });
+    </script>
+</body>
+</html>

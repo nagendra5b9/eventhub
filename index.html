@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub — High-Concurrency Ticket Booking Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">🎟️</span> EventHub
+            </a>
+            <nav class="nav-links">
+                <a href="index.html" class="active">Events</a>
+                <a href="#" id="myBookingsNavBtn" style="display:none;" onclick="showMyBookings()">My Bookings</a>
+                <div id="authSection">
+                    <button class="btn btn-outline" onclick="openModal('loginModal')">Sign In</button>
+                    <button class="btn btn-primary" onclick="openModal('registerModal')">Sign Up</button>
+                </div>
+                <div id="userSection" style="display:none;" class="user-profile">
+                    <span id="userNameDisplay" class="user-badge"></span>
+                    <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Experience Live Events with Zero Booking Collisions</h1>
+            <p>Powered by Java 21, Spring Boot 3, Redis Distributed Seat Locking, and Apache Kafka.</p>
+        </div>
+    </section>
+
+    <!-- Main Content Container -->
+    <main class="container">
+        <!-- Event List Section -->
+        <div id="eventsView">
+            <div class="section-header">
+                <h2>Featured Events</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterEvents('all')">All</button>
+                    <button class="filter-btn" onclick="filterEvents('Technology')">Technology</button>
+                    <button class="filter-btn" onclick="filterEvents('Concert')">Concerts</button>
+                </div>
+            </div>
+            <div id="eventsList" class="events-grid">
+                <!-- Events rendered by JS -->
+                <div class="loading-spinner">Loading available events...</div>
+            </div>
+        </div>
+
+        <!-- My Bookings View (Hidden by default) -->
+        <div id="bookingsView" style="display:none;">
+            <div class="section-header">
+                <h2>My Bookings & Invoices</h2>
+                <button class="btn btn-outline btn-sm" onclick="showEventsView()">← Back to Events</button>
+            </div>
+            <div id="bookingsList" class="bookings-grid">
+                <!-- Bookings rendered by JS -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth Modals -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h3>Sign In to EventHub</h3>
+            <p class="modal-subtext">Default test account: <code>user@eventhub.com</code> / <code>user123</code></p>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="user@eventhub.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <div id="loginError" class="alert-error" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h3>Create an Account</h3>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" required placeholder="Nagendra Reddy">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" required placeholder="name@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required placeholder="••••••••">
+                </div>
+                <div id="regError" class="alert-error" style="display:none;"></div>
+                <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>EventHub Architecture: Java 21 • Spring Boot 3.3 • MySQL • Redis TTL Locking • Apache Kafka Event Bus</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initAuthUI();
+            loadEvents();
+        });
+    </script>
+</body>
+</html>
